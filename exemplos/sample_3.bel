@@ -1,0 +1,16 @@
+main()
+{
+    var float num;
+
+    num = readInput();
+
+    if (num < 6) then
+    {
+        printLn num;
+    };
+
+    if (num > 5) then
+    {
+        printLn 6;
+    };
+}

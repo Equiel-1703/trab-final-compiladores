@@ -1,0 +1,13 @@
+main()
+{
+    var float meuNum;
+
+    meuNum = 3;
+
+    printLn dobra(meuNum);
+}
+
+fun float dobra(float num)
+{
+    return (2 * num);
+}

@@ -1,0 +1,28 @@
+main() {
+  var float n;
+  var float resultado;
+
+  n = readInput();
+
+  if (n < 0) then {
+    printLn n;
+    printLn 0;
+  };
+
+  if ((n == 0) || (n > 0)) then {
+    resultado = fatorial(n);
+    printLn resultado;
+  };
+}
+
+fun float fatorial(float x) {
+  var float acc;
+  acc = 1;
+
+  while (x > 1) {
+    acc = (acc * x);
+    x = (x - 1);
+  };
+
+  return acc;
+}

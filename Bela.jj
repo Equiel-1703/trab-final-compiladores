@@ -1,0 +1,300 @@
+PARSER_BEGIN(Bela)
+
+import java.io.*;
+import java.util.ArrayList;
+import ast.*;
+
+public class Bela {
+
+  public static void main(String args[]) throws ParseException,IOException {
+    Bela parser = new Bela(new FileInputStream(args[0]));
+ 	  
+    Prog arvore_bela = parser.Bela();
+
+    // Gerar codigo
+    generateCode(arvore_bela, args[0]);
+  }
+
+  private static void generateCode(Prog prog, String fileName) {
+    StringBuilder code = new StringBuilder();
+    
+    String className = fileName.substring(fileName.lastIndexOf('/') + 1, fileName.lastIndexOf('.'));
+    className = className.substring(0, 1).toUpperCase() + className.substring(1);
+
+    code.append("import java.util.Scanner;\n\n");
+    code.append("public class ").append(className).append(" {\n\n");
+    code.append("  public static void main(String[] args) {\n");
+    code.append("    final Scanner s = new Scanner(System.in);\n");
+    
+    String mainCode = prog.main.toString();
+    if (!mainCode.isEmpty()) {
+      String[] lines = mainCode.split("\n");
+      for (String line : lines) {
+        code.append("    ").append(line).append("\n");
+      }
+    }
+    code.append("  }\n\n");
+
+    if(!prog.fun.isEmpty()) {
+      code.append("  // Funções\n");
+      
+      for (Fun fun : prog.fun) {
+        String funCode = fun.toString();
+        String[] funLines = funCode.split("\n");
+
+        for (String line : funLines) {
+          code.append("  ").append(line).append("\n");
+        }
+
+        code.append("\n");
+      }
+    }
+
+    code.append("}\n");
+
+    String fileOutput = fileName.substring(0, fileName.lastIndexOf('/')) + "/" + className + ".java";
+
+    try (FileWriter writer = new FileWriter(fileOutput)) {
+      writer.write(code.toString());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    System.out.println("Código gerado em: " + fileOutput);
+  }
+
+}
+
+PARSER_END(Bela)
+
+// Isso é pra ser ignorado (espaços em branco e tabs)
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+  // Keywords
+  <MAIN: "main">
+  |<VAR: "var">
+  |<IF: "if">
+  |<THEN: "then">
+  |<WHILE: "while">
+  |<READ_INPUT: "readInput">
+  |<RETURN: "return">
+  |<PRINT: "printLn">
+  |<TRUE: "true">
+  |<FALSE: "false">
+  |<FUNC_DECL: "fun">
+
+
+  // Parênteses, chaves, ponto e vírgula etc
+  |<SEMCOL: ";">
+  |<APAR: "(">
+  |<FPAR: ")">  
+  |<ACHAVES: "{">
+  |<FCHAVES: "}">
+  |<COL: ",">
+
+  // Operações
+  |<OP_SUM: "+">
+  |<OP_SUB: "-">
+  |<OP_MULT: "*">
+  |<OP_DIV: "/">
+  |<OP_AND: "&&">
+  |<OP_OR: "||">
+  |<OP_LT: "<">
+  |<OP_GT: ">">
+  |<OP_EQ: "==">
+  |<ATRIB: "=">
+
+  // Tipos
+  |<TYPE_FLOAT: "float">
+  |<TYPE_BOOL: "bool">
+  |<TYPE_VOID: "void">
+  
+}
+
+TOKEN :
+{
+  <NUM : (["0"-"9"])+ ("." (["0"-"9"])+)? ("e" ("+" | "-")? (["0"-"9"])+)?>
+  |< ID: ["a"-"z","A"-"Z"] (["a"-"z","A"-"Z","0"-"9"])* ("_" (["a"-"z","A"-"Z","0"-"9"])+)*>
+  
+}
+
+
+
+Prog Bela () :
+{
+  Main m;
+  ArrayList<Fun> f = new ArrayList<>();
+}
+{
+  (m = Main()) (f = Func())?
+
+  {
+    return new Prog(m, f);
+  }
+}
+
+Main Main() : 
+{
+  ArrayList<VarDecl> vars = new ArrayList<>();
+  ArrayList<Comando> coms = new ArrayList<>();
+}
+{
+  <MAIN> <APAR> <FPAR> <ACHAVES> VarDecl(vars) SeqComs(coms) <FCHAVES>
+
+  {
+    return new Main(vars, coms);
+  }
+}
+
+String Tipo() : 
+{
+  Token c;
+}
+{
+  c=<TYPE_VOID> { return c.image; }
+  | c=<TYPE_FLOAT> { return c.image; }
+  | c=<TYPE_BOOL> { return "boolean"; }
+}
+
+void VarDecl(ArrayList<VarDecl> vars) : 
+{
+  String tipo;
+  Token id;
+}
+{
+  (<VAR> tipo=Tipo() id=<ID> <SEMCOL> { vars.add(new VarDecl(tipo, id.image)); })*
+}
+
+void SeqComs(ArrayList<Comando> coms) : 
+{
+  Comando c;
+}
+{
+  (c=Comando() { coms.add(c); })*
+}
+
+Comando Comando() : 
+{
+  Token id, t;
+  Comando c;
+  Exp e;
+  ArrayList<Comando> coms = new ArrayList<>();
+}
+{
+  id=<ID> c=IDCommands(id) <SEMCOL> { return c; }               // ID commands
+  | t=<IF> e=Exp() <THEN> <ACHAVES> SeqComs(coms) <FCHAVES> <SEMCOL> { return new CIf(t.beginLine, e, coms); } // if-then
+  | t=<WHILE> e=Exp() <ACHAVES> SeqComs(coms) <FCHAVES> <SEMCOL>  { return new CWhile(t.beginLine, e, coms); } // while
+  | t=<RETURN> e=Exp() <SEMCOL> { return new CReturn(t.beginLine, e); } // return
+  | t=<PRINT> e=Exp() <SEMCOL> { return new CPrint(t.beginLine, e); } // printLn
+}
+
+Comando IDCommands(Token id) :
+{
+  ArrayList<Exp> args = new ArrayList<>();
+  Comando c;
+}
+{
+  <APAR> (args=ListaExp())? <FPAR> { return new CChamadaFun(id.beginLine, id.image, args); } // ID function call
+  | <ATRIB> c=IDAttrib(id)         { return c; }                                             // ID assignment
+}
+
+Comando IDAttrib(Token id) : 
+{
+  Exp e;
+}
+{
+  e=Exp() {return new CAtribuicao(id.beginLine, id.image, e); }                    // Expression assignment
+  | <READ_INPUT> <APAR> <FPAR>  { return new CReadInput(id.beginLine, id.image); } // ID readInput
+}
+
+Exp Exp() :
+{
+  Exp e1, e2, f;
+  String op;
+}
+{
+  <APAR> e1=Exp() op=Op() e2=Exp() <FPAR> { return new EOpExp(op, e1, e2); }
+  | f=Fator() { return f; }
+}
+
+Exp Fator() : 
+{
+  Token id, num, t;
+  ArrayList<Exp> expList = new ArrayList<>();
+}
+{
+  id=<ID> (<APAR> (expList=ListaExp())? <FPAR> { return new EChamadaFun(id.image, expList); })?   { return new EVar(id.image); } // Variable or function call
+  | num=<NUM> { return new EFloat(Float.parseFloat(num.image)); } // Numeric literal
+  | <TRUE> { return new ETrue(); } // Boolean literal true
+  | <FALSE> { return new EFalse(); } // Boolean literal false
+}
+
+String Op() : 
+{
+  Token op;
+}
+{
+  op=<OP_SUM>  { return op.image; }
+  | op=<OP_SUB> { return op.image; }
+  | op=<OP_MULT> { return op.image; }
+  | op=<OP_DIV> { return op.image; }
+  | op=<OP_AND> { return op.image; }
+  | op=<OP_OR> { return op.image; }
+  | op=<OP_LT> { return op.image; }
+  | op=<OP_GT> { return op.image; }
+  | op=<OP_EQ> { return op.image; }
+}
+
+ArrayList<Exp> ListaExp() :
+{
+  Exp e;
+  ArrayList<Exp> expList = new ArrayList<>();
+}
+{
+  e=Exp() { expList.add(e); } (<COL> e=Exp() { expList.add(e); })*
+
+  {
+    return expList;
+  }
+}
+
+void ListaArgs(ArrayList<ParamFormalFun> params) :
+{
+  String tipo;
+  Token id;
+}
+{
+  tipo=Tipo() id=<ID> { params.add(new ParamFormalFun(tipo, id.image)); } (<COL> tipo=Tipo() id=<ID> { params.add(new ParamFormalFun(tipo, id.image)); })*
+}
+
+ArrayList<Fun> Func() :
+{
+  Token fun;
+  String tipo;
+
+  ArrayList<ParamFormalFun> params = new ArrayList<>();
+  ArrayList<VarDecl> vars = new ArrayList<>();
+  ArrayList<Comando> body = new ArrayList<>();
+  
+  Fun f;
+  ArrayList<Fun> funList = new ArrayList<>();
+}
+{
+  (<FUNC_DECL> tipo=Tipo() fun=<ID> <APAR> (ListaArgs(params))? <FPAR> <ACHAVES> VarDecl(vars) SeqComs(body) <FCHAVES>
+  {
+    f = new Fun(fun.image, params, tipo, vars, body);
+    funList.add(f);
+  })+
+
+  {
+    return funList;
+  }
+}

@@ -1,0 +1,20 @@
+main() {
+  var float valorInicial;
+  var float valorFinal;
+  var float salto;
+  var float soma;
+
+  soma = 0;
+
+  valorInicial = readInput();
+  valorFinal = readInput();
+  salto = readInput();
+
+  while ((valorInicial < valorFinal) || (valorInicial == valorFinal)) {
+    soma = (soma + valorInicial);
+    valorInicial = (valorInicial + salto);
+  };
+
+  printLn soma;
+}
+
