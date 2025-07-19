@@ -2,7 +2,11 @@
 
 ## 🎯 Objetivo
 
-Este projeto tem como objetivo implementar um **tradutor de código-fonte** que converte programas escritos na linguagem **Bela** (`.bel`) para a linguagem **Java** (`.java`). A linguagem Bela é uma linguagem fictícia de alto nível usada com fins didáticos, contendo construções sintáticas como comandos de atribuição, controle de fluxo, entrada e saída.
+Este projeto tem como objetivo implementar um **transpilador** que converte programas escritos na linguagem **Bela** (`.bel`) para a linguagem **Java** (`.java`). A linguagem Bela é uma linguagem fictícia de alto nível usada com fins didáticos, contendo construções sintáticas como comandos de atribuição, controle de fluxo, entrada e saída.
+
+## 👥 Autores
+- Daniel Lisboa Pereira
+- Henrique Gabriel Rodrigues
 
 ## Exemplos de programas
 ### sample_1.bel
@@ -12,13 +16,13 @@ Este projeto tem como objetivo implementar um **tradutor de código-fonte** que 
 - Função que dobra o número 3.
 
 ### sample_3.bel
-- Le um número, se for menor que 6, printa ele mesmo, caso contrário, printa o número 6.
+- Lê um número, se for menor que 6, printa o número informado, caso contrário, printa o número 6.
 
 ### sample_4.bel
-- Realiza operações com precedência de soma e multiplicação, retornando o resultado 10 e 5.
+- Calcula expressões de soma e multiplicação, retornando os resultados 10 e 5.
 
 ### sample_5.bel
-- Cálculo de Fatorial com Validação de Entrada
+- Calcula o Fatorial do número informado pelo usuário e faz validação de entrada
 
 ### sample_6.bel
 - Programa que soma todos os números de "valorInicial" até "valorFinal", usando o valor "salto" como incremento.
