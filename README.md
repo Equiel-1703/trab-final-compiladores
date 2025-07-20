@@ -8,6 +8,11 @@ Este projeto tem como objetivo implementar um **transpilador** que converte prog
 - Daniel Lisboa Pereira
 - Henrique Gabriel Rodrigues
 
+## Comandos para Executar
+- javacc Bela.jj
+- javac *.java
+- java Bela programa_bela.bel
+
 ## Exemplos de programas
 ### sample_1.bel
 - Função que printa 9.0.
