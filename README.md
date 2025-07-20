@@ -9,9 +9,11 @@ Este projeto tem como objetivo implementar um **transpilador** que converte prog
 - Henrique Gabriel Rodrigues
 
 ## Comandos para Executar
-- javacc Bela.jj
-- javac *.java
-- java Bela programa_bela.bel
+```
+javacc Bela.jj
+javac *.java
+java Bela programa_bela.bel
+```
 
 ## Exemplos de programas
 ### sample_1.bel
